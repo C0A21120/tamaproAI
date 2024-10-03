@@ -147,7 +147,7 @@ thread_id = create_thread_fun()
 @cl.on_chat_start
 async def on_chat_start():
 
-     await cl.Message(content="行きたい観光地を紹介します。(qを入力すれば終了)\n1つずつ内容の入力お願いします。\nあなたのいる場所（例：八王子駅）？").send() # 初期表示されるメッセージを送信する
+     await cl.Message(content="行きたい観光地を紹介します。(qを入力すれば終了)\n1つずつ内容の入力お願いします。\n同じ言葉が返ってきたら再び入力お願いします。\nあなたのいる場所を入力してください（例：八王子駅）").send() # 初期表示されるメッセージを送信する
 
 # メッセージが送信されたときに実行される関数
 @cl.on_message 
