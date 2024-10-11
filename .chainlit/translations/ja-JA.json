@@ -216,15 +216,7 @@
         "Design": {},
         "Env": {
             "savedSuccessfully": "保存が成功しました",
-            "requiredApiKeys": "必要なAPIキー",
-            "requiredApiKeysInfo": "このアプリを使用するには、以下のAPIキーが必要です。キーはデバイスのローカルストレージに保存されます。"
-        },
-        "Page": {
-            "notPartOfProject": "このプロジェクトの一部ではありません。"
-        },
-        "ResumeButton": {
-            "resumeChat": "チャットを再開"
+            "required":"保存してください"
         }
     }
 }
-

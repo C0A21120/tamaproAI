@@ -6,6 +6,9 @@ import random
 import chainlit as cl
 import asyncio
 import sys
+import datetime
+import csv
+
 
 global thread_id
 global assistant_id
@@ -27,7 +30,6 @@ my_file = client.files.create(
   purpose="assistants"
 )
 file_id = my_file.id
-
 
 #Assistant 作成する関数
 def assistant_fun(file_id):
@@ -131,19 +133,56 @@ def dele(file_id,assistant_id,thread_id):
     client.beta.threads.delete(thread_id=thread_id)  # スレッドの削除
 
 
-#スレッドをテキストに書き出す
-def write_messages_to_file(thread_id, filename="thread_messages.txt"):
+
+def write_messages_to_file(thread_id,):
     messages = client.beta.threads.messages.list(thread_id=thread_id)
+    now = datetime.datetime.now()
+    filename = './output/log_' + now.strftime('%Y%m%d_%H%M%S') + '.csv'
     with open(filename, "w", encoding="utf-8") as file:
         for message in messages.data:
             file.write(f"{message.role}: {message.content}\n")
             
+#スレッドをテキストに書き出す
+def write_messages_to_file(thread_id, filename="thread_messages.txt"):
+    messages = client.beta.threads.messages.list(thread_id=thread_id)
+    with open(filename, "a", encoding="utf-8") as file:
+        for message in messages.data:
+            file.write(f"{message.role}: {message.content}\n")
+
+#ファイルの中身を初期化する
+def init_file(filename="thread_messages.txt"):
+    # 'w'モードでファイルを開くことで初期化
+    with open(filename, 'w') as f:
+        # 必要に応じて初期行を追加することも可能
+        # f.write("初期行のテキスト\n")  # 初期行を追加したい場合
+        pass  # 何も書き込まない場合はpassを使う
+
+#全スレッドをコピーする
+def convert_text_to_csv(input_filename="thread_messages.txt"):
+
+    now = datetime.datetime.now()
+    csv_filename = './output/log_' + now.strftime('%Y%m%d_%H%M%S') + '.csv'
+
+    # テキストファイルを読み込み
+    with open(input_filename, 'r', encoding='utf-8') as text_file:
+        lines = text_file.readlines()
+        
+    # CSVファイルに書き込み
+    with open(csv_filename, 'w', newline='', encoding='utf-8') as csv_file:
+        writer = csv.writer(csv_file)
+        
+        for line in lines:
+            # 行をカンマで分割（必要に応じて区切り文字を変更）
+            row = line.strip().split(',')  # カンマで区切る
+            writer.writerow(row)
+
 
 assistant_id = assistant_fun(file_id)
 thread_id = create_thread_fun()
+init_file()
 
 
-
+# チャットが開始されたときに実行される関数
 @cl.on_chat_start
 async def on_chat_start():
 
@@ -156,6 +195,7 @@ async def on_message(input_message):
 
     if input_message.content=="q":
         print("チャットを終了します")
+        convert_text_to_csv()
         write_messages_to_file(thread_id)
         dele(file_id, assistant_id,thread_id)
         await asyncio.sleep(10)
@@ -173,6 +213,9 @@ async def on_message(input_message):
     wait_for_assistant_response(thread_id, run.id)
     # 結果確認
     message = print_thread_messages(thread_id)
+    # スレッドメッセージを追加
+    write_messages_to_file(thread_id)
+
 
     await cl.Message(content=message).send()  # チャットボットからの返答を送信する
 
