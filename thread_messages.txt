@@ -1,4 +1,6 @@
-assistant: [TextContentBlock(text=Text(annotations=[], value='八王子駅にいらっしゃるのですね。それでは、いくつか質問をさせていただきたいと思います。まずは、年齢を教えていただけますか？'), type='text')]
+assistant: [TextContentBlock(text=Text(annotations=[], value='こんにちは！八王子駅にいるんですね。お手伝いできることがあれば仰ってください。最初にいくつか質問させていただきたいのですが、差し支えなければこちらにご回答いただけますか？\n\n1. あなたの年齢を教えていただけますか？\n'), type='text')]
 user: [TextContentBlock(text=Text(annotations=[], value='八王子駅にいます'), type='text')]
-assistant: [TextContentBlock(text=Text(annotations=[], value='八王子駅にいらっしゃるのですね。それでは、いくつか質問をさせていただきたいと思います。まずは、年齢を教えていただけますか？'), type='text')]
+assistant: [TextContentBlock(text=Text(annotations=[], value='ありがとうございます！次に、これまでの旅行経験やどれくらいの頻度で旅行に行かれるか教えていただけますか？'), type='text')]
+user: [TextContentBlock(text=Text(annotations=[], value='22歳です'), type='text')]
+assistant: [TextContentBlock(text=Text(annotations=[], value='こんにちは！八王子駅にいるんですね。お手伝いできることがあれば仰ってください。最初にいくつか質問させていただきたいのですが、差し支えなければこちらにご回答いただけますか？\n\n1. あなたの年齢を教えていただけますか？\n'), type='text')]
 user: [TextContentBlock(text=Text(annotations=[], value='八王子駅にいます'), type='text')]

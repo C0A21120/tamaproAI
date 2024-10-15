@@ -1,0 +1,2 @@
+assistant: [TextContentBlock(text=Text(annotations=[], value='八王子駅にいらっしゃるんですね！素敵です。まず、旅行のプランニングをするためにいくつかお伺いしたいことがあります。\n\n1. お客様のご年齢を教えていただけますか？'), type='text')]
+user: [TextContentBlock(text=Text(annotations=[], value='はちおうじえきにいます'), type='text')]

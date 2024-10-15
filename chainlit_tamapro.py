@@ -132,15 +132,6 @@ def dele(file_id,assistant_id,thread_id):
     client.beta.assistants.delete(assistant_id)  # アシスタントの削除
     client.beta.threads.delete(thread_id=thread_id)  # スレッドの削除
 
-
-
-def write_messages_to_file(thread_id,):
-    messages = client.beta.threads.messages.list(thread_id=thread_id)
-    now = datetime.datetime.now()
-    filename = './output/log_' + now.strftime('%Y%m%d_%H%M%S') + '.csv'
-    with open(filename, "w", encoding="utf-8") as file:
-        for message in messages.data:
-            file.write(f"{message.role}: {message.content}\n")
             
 #スレッドをテキストに書き出す
 def write_messages_to_file(thread_id, filename="thread_messages.txt"):
@@ -185,37 +176,48 @@ init_file()
 # チャットが開始されたときに実行される関数
 @cl.on_chat_start
 async def on_chat_start():
-
-     await cl.Message(content="行きたい観光地を紹介します。(qを入力すれば終了)\n1つずつ内容の入力お願いします。\n同じ言葉が返ってきたら再び入力お願いします。\nあなたのいる場所を入力してください（例：八王子駅）").send() # 初期表示されるメッセージを送信する
+    await cl.Message(content="行きたい観光地を紹介します。(qを入力すれば終了)\n1つずつ内容の入力お願いします。\n同じ言葉が返ってきたら再び入力お願いします。\nあなたのいる場所を入力してください（例：八王子駅）").send() # 初期表示されるメッセージを送信する
 
 # メッセージが送信されたときに実行される関数
 @cl.on_message 
 async def on_message(input_message):
     print("入力されたメッセージ: " + input_message.content)
+    
+    if input_message.content!="終了":
 
-    if input_message.content=="q":
+        # ユーザーのメッセージを文字列として取得
+        user_message = input_message.content  # ここで content プロパティを使用してメッセージ内容を取得
+
+        # ユーザーのメッセージを作成する
+        user_message_fun(user_message, thread_id)
+        # スレッドの実行
+        run = run_fun(thread_id, assistant_id)
+        # 結果待ち
+        wait_for_assistant_response(thread_id, run.id)
+        # 結果確認
+        message = print_thread_messages(thread_id)
+        # スレッドメッセージを追加
+        write_messages_to_file(thread_id)
+        
+        await cl.Message(content=message).send()  # チャットボットからの返答を送信する
+
+    else:
+        message = input_message.content
         print("チャットを終了します")
         convert_text_to_csv()
-        write_messages_to_file(thread_id)
         dele(file_id, assistant_id,thread_id)
-        await asyncio.sleep(10)
-        sys.exit()
+        await cl.Message(content="ご利用ありがとうございました。これ以降の入力は絶対にやめるようにお願いいたします。").send() # チャットボットからの返答を送信する
+        # 画像ファイルのパス
+        image_path = "./image/end.png"
+    
+        # 画像を読み込み、チャットボットのメッセージとして表示
+        image = cl.Image(path="./image/end.jpeg", name="image1", display="inline")
+        # 画像を読み込み、チャットボットのメッセージとして表示
+        await cl.Message(content= "表示したい画像の説明",elements=[image]).send()
 
+        @cl.on_message
+        async def on_message(message: cl.Message):
+            response = "終了しました。画面を閉じるようにお願いします。"
+            await cl.Message(response).send()
 
-    # ユーザーのメッセージを文字列として取得
-    user_message = input_message.content  # ここで content プロパティを使用してメッセージ内容を取得
-
-    # ユーザーのメッセージを作成する
-    user_message_fun(user_message, thread_id)
-    # スレッドの実行
-    run = run_fun(thread_id, assistant_id)
-    # 結果待ち
-    wait_for_assistant_response(thread_id, run.id)
-    # 結果確認
-    message = print_thread_messages(thread_id)
-    # スレッドメッセージを追加
-    write_messages_to_file(thread_id)
-
-
-    await cl.Message(content=message).send()  # チャットボットからの返答を送信する
 
