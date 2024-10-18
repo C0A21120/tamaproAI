@@ -8,12 +8,10 @@ import asyncio
 import sys
 import datetime
 import csv
-
-
-global thread_id
-global assistant_id
-
-
+#グローバル変数の設定
+thread_id = None
+assistant_id = None
+#dotenvの使用
 dotenv.load_dotenv()
 
 count=0
@@ -124,22 +122,21 @@ def print_thread_messages(thread_id):
         message = f"tourist_assistant: {msgs.data[0].content[0].text.value}"
 
         return message
-    
+
  # ファイル等の削除
 def dele(file_id,assistant_id,thread_id):
-   
-    client.files.delete(file_id=file_id)  # ファイルの削除
+    #client.files.delete(file_id=file_id)  # ファイルの削除
     client.beta.assistants.delete(assistant_id)  # アシスタントの削除
     client.beta.threads.delete(thread_id=thread_id)  # スレッドの削除
 
-            
-#スレッドをテキストに書き出す
+
+ #スレッドをテキストに書き出す
 def write_messages_to_file(thread_id, filename="thread_messages.txt"):
     messages = client.beta.threads.messages.list(thread_id=thread_id)
     with open(filename, "a", encoding="utf-8") as file:
         for message in messages.data:
             file.write(f"{message.role}: {message.content}\n")
-
+            #file.write("\n")
 #ファイルの中身を初期化する
 def init_file(filename="thread_messages.txt"):
     # 'w'モードでファイルを開くことで初期化
@@ -157,32 +154,41 @@ def convert_text_to_csv(input_filename="thread_messages.txt"):
     # テキストファイルを読み込み
     with open(input_filename, 'r', encoding='utf-8') as text_file:
         lines = text_file.readlines()
-        
+
     # CSVファイルに書き込み
     with open(csv_filename, 'w', newline='', encoding='utf-8') as csv_file:
         writer = csv.writer(csv_file)
-        
+
         for line in lines:
             # 行をカンマで分割（必要に応じて区切り文字を変更）
             row = line.strip().split(',')  # カンマで区切る
             writer.writerow(row)
-
-
-assistant_id = assistant_fun(file_id)
-thread_id = create_thread_fun()
-init_file()
-
-
+# assistant_id = assistant_fun(file_id)
+# thread_id = create_thread_fun()
+# init_file()
 # チャットが開始されたときに実行される関数
 @cl.on_chat_start
 async def on_chat_start():
+    global thread_id
+    global assistant_id
+#変数の初期化
+    thread_id = None
+    assistant_id = None
     await cl.Message(content="行きたい観光地を紹介します。(qを入力すれば終了)\n1つずつ内容の入力お願いします。\n同じ言葉が返ってきたら再び入力お願いします。\nあなたのいる場所を入力してください（例：八王子駅）").send() # 初期表示されるメッセージを送信する
-
+    assistant_id = assistant_fun(file_id)
+    thread_id = create_thread_fun()
+    init_file()
+    cl.user_session.set("assistant_id", assistant_id)
+    cl.user_session.set("thread_id", thread_id)
 # メッセージが送信されたときに実行される関数
-@cl.on_message 
+@cl.on_message
 async def on_message(input_message):
+    assistant_id = cl.user_session.get("assistant_id")
+    thread_id = cl.user_session.get("thread_id")
+    #cl.user_session.set("assistant_id", assistant_id)
+    #cl.user_session.set("thread_id", thread_id)
     print("入力されたメッセージ: " + input_message.content)
-    
+
     if input_message.content!="終了":
 
         # ユーザーのメッセージを文字列として取得
@@ -196,28 +202,23 @@ async def on_message(input_message):
         wait_for_assistant_response(thread_id, run.id)
         # 結果確認
         message = print_thread_messages(thread_id)
-        # スレッドメッセージを追加
-        write_messages_to_file(thread_id)
-        
+
+
         await cl.Message(content=message).send()  # チャットボットからの返答を送信する
 
     else:
         message = input_message.content
         print("チャットを終了します")
+          # スレッドメッセージを追加
+        write_messages_to_file(thread_id)
         convert_text_to_csv()
         dele(file_id, assistant_id,thread_id)
-        await cl.Message(content="ご利用ありがとうございました。これ以降の入力は絶対にやめるようにお願いいたします。").send() # チャットボットからの返答を送信する
-        # 画像ファイルのパス
-        image_path = "./image/end.png"
-    
-        # 画像を読み込み、チャットボットのメッセージとして表示
-        image = cl.Image(path="./image/end.jpeg", name="image1", display="inline")
-        # 画像を読み込み、チャットボットのメッセージとして表示
-        await cl.Message(content= "表示したい画像の説明",elements=[image]).send()
-
-        @cl.on_message
-        async def on_message(message: cl.Message):
-            response = "終了しました。画面を閉じるようにお願いします。"
-            await cl.Message(response).send()
-
-
+        await cl.Message(content="ご利用ありがとうございました。（「再起動」と入力でチャット再開）").send() # チャットボットからの返答を送信する
+        # @cl.on_message
+        # async def on_message(message: cl.Message):
+        #     if input_message.content == "再起動":
+        #         print("再起動")
+        #         await on_chat_start()
+        #     else:
+        #         response = "ご利用ありがとうございます。（「再起動」と入力でチャット再開）"
+        #         await cl.Message(response).send()
